@@ -1,0 +1,429 @@
+<html>
+ 
+<style>
+
+.bordered {
+	border: 1px solid;
+}
+
+.number {
+	width: 64px;
+}
+ 
+</style>
+
+<body>
+
+<div id="divUI">
+
+	<label><b>Multiple Text Document Editor</b></label>
+
+	<div id="divProjectFile" class="bordered">
+		<label>Project:</label>
+		<div>
+			<label>Name:</label>
+			<input id="inputProjectName" onchange="inputProjectName_Changed(this);"></input>
+		</div>
+		<button onclick="buttonProjectSave_Clicked();">Save</button>
+		<button onclick="buttonProjectLoad_Clicked();">Load:</button>
+		<input id="inputFileProjectToLoad" type="file"></input>
+		<button onclick="buttonProjectNew_Clicked();">New</button>
+	</div>
+
+	<div id="divDocumentList" class="bordered">
+		<label>Documents:</label>
+		<div>
+			<button onclick="buttonDocumentNew_Clicked();">New</button>		
+			<button onclick="buttonDocumentExistingAdd_Clicked();">Add Existing:</button>
+			<input id="inputFileDocumentExistingToAdd" type="file"></input>
+			<button onclick="buttonDocumentSelectedRemove_Clicked();">Remove Selected</button>
+		</div>
+		<select id="selectDocumentsInProject" style="width:100%" size="10" onchange="selectDocumentsInProject_Changed(this);"></select>
+	</div>
+
+	<div id="divDocumentSelected" class="bordered">
+		<div><label>Document Selected:</label></div>
+		<div>
+			<label>Name:</label>
+			<input id="inputDocumentSelectedName" onchange="inputDocumentSelectedName_Changed(this);"></input>
+			<button onclick="buttonDocumentSelectedSave_Clicked();">Save</button>
+			<label>Cursor:</label>
+			<label>Row:</label>
+			<input id="inputCursorRow" class="number" type="number" onchange="inputCursorColumnOrRow_Changed(this);"></input>
+			<label>Column:</label>
+			<input id="inputCursorColumn" class="number" type="number" onchange="inputCursorColumnOrRow_Changed(this);"></input>
+
+		</div>
+		<div><label>Contents:</label></div>
+		<div>
+			<textarea 
+				id="textareaDocumentSelectedContents" 
+				style="width:100%" 
+				rows="20" 
+				onchange="textareaDocumentSelectedContents_Changed(this);" 
+				onkeyup="textareaDocumentSelectedContents_CursorMoved(this);" 
+				onmouseup="textareaDocumentSelectedContents_CursorMoved(this);">
+			</textarea>
+		</div>
+	</div>
+
+	<div id="divSearch" class="bordered">
+		<div>
+			<button onclick="buttonSearch_Clicked();">Search for:</button>
+			<input id="inputTextToSearchFor"></input>
+			<input id="checkboxSearchMatchCase" type="checkbox">Match Case</input>
+		</div>
+		<div>
+			<div><label>Results:</label></div>
+			<select id="selectSearchResults" size="8" style="width:100%" onchange="selectSearchResults_Changed(this);"></select>
+		</div>
+		
+	</div>
+
+	</div>
+
+</div>
+
+<script type="text/javascript">
+
+function buttonDocumentExistingAdd_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var inputFileDocumentExistingToAdd = document.getElementById
+	(
+		"inputFileDocumentExistingToAdd"
+	);
+	var fileToLoad = inputFileDocumentExistingToAdd.files[0];
+	if (fileToLoad == null)
+	{
+		alert("Please choose a file with the accompanying 'Choose File' button first.");
+	}
+	else
+	{
+		var documentAdded = FileHelper.loadFileAsText
+		(
+			fileToLoad,
+			buttonDocumentExistingAdd_Clicked_FileLoaded // callback
+		);
+	}
+}
+
+function buttonDocumentExistingAdd_Clicked_FileLoaded(fileLoadedName, fileLoadedContents)
+{
+	var project = Globals.Instance.session.project;
+
+	var documentToAdd = new Document
+	(
+		fileLoadedName,
+		fileLoadedContents
+	);
+	project.documentAdd(documentToAdd);
+
+	project.domUpdate();
+}
+
+function buttonDocumentNew_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	project.documentNew();
+
+	project.domUpdate();
+}
+
+function buttonDocumentSelectedRemove_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		project.documentRemove(documentSelected);
+	}
+
+	project.domUpdate();
+}
+
+function buttonDocumentSelectedSave_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		FileHelper.saveTextAsFile
+		(
+			documentSelected.contents, documentSelected.name
+		);
+	}
+
+	project.domUpdate();
+}
+
+function buttonProjectLoad_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var inputFileProjectToLoad = document.getElementById
+	(
+		"inputFileProjectToLoad"
+	);
+	var fileToLoad = inputFileProjectToLoad.files[0];
+	if (fileToLoad == null)
+	{
+		alert("Please choose a file with the accompanying 'Choose File' button first.");
+	}
+	else
+	{
+		FileHelper.loadFileAsBytes
+		(
+			fileToLoad,
+			buttonProjectLoad_Clicked_FileLoaded // callback
+		);
+	}
+}
+
+function buttonProjectLoad_Clicked_FileLoaded(fileLoadedName, fileLoadedContentsAsBytes)
+{
+	var projectAsTar = TarFile.fromBytes(fileLoadedName, fileLoadedContentsAsBytes);
+	var documentsAsTarEntries = projectAsTar.entries;
+	var documents = [];
+
+	for (var i = 0; i < documentsAsTarEntries.length; i++)
+	{
+		var documentAsTarEntry = documentsAsTarEntries[i];
+		var documentName = documentAsTarEntry.header.fileName;
+		var documentContentsAsBytes = documentAsTarEntry.dataAsBytes;
+		var documentContentsAsString = ByteHelper.bytesToStringUTF8(documentContentsAsBytes);
+		var document = new Document(documentName, documentContentsAsString);
+		documents.push(document);
+	}
+
+	var projectLoaded = new Project
+	(
+		fileLoadedName,
+		documents
+	);
+
+	Globals.Instance.session.project = projectLoaded;
+
+	projectLoaded.domUpdate();
+}
+
+function buttonProjectNew_Clicked()
+{
+	var projectNew = new Project
+	(
+		"Untitled.tar", []
+	);
+
+	Globals.Instance.session.project = projectNew;
+
+	projectNew.domUpdate();
+
+}
+
+
+function buttonProjectSave_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	
+	var projectAsTarFile = project.toTarFile();
+	var projectAsBytes = projectAsTarFile.toBytes();
+	FileHelper.saveBytesAsFile(projectAsBytes, project.name);
+}
+
+function buttonSearch_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	
+	var inputTextToSearchFor = document.getElementById
+	(
+		"inputTextToSearchFor"
+	);
+	var textToSearchFor = inputTextToSearchFor.value;
+
+	var checkboxSearchMatchCase = document.getElementById
+	(
+		"checkboxSearchMatchCase"
+	);
+	var matchCase = checkboxSearchMatchCase.checked;
+
+	project.searchForText(textToSearchFor, matchCase);
+
+	project.domUpdate();
+}
+
+function inputDocumentSelectedName_Changed(inputDocumentSelectedName)
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		var valueFromDOM = inputDocumentSelectedName.value;
+		documentSelected.name = valueFromDOM;
+	}
+
+	//project.domUpdate();	
+}
+
+function inputCursorColumnOrRow_Changed()
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		var inputCursorColumn = document.getElementById("inputCursorColumn");
+		var inputCursorRow = document.getElementById("inputCursorRow");
+
+		var cursorPos = documentSelected.cursorPos;
+
+		cursorPos.x = Math.floor(inputCursorColumn.value) - 1;
+		cursorPos.y = Math.floor(inputCursorRow.value) - 1;
+
+		project.domUpdate_Cursor_Place();
+	}
+}
+
+function inputProjectName_Changed(inputProjectName)
+{
+	var project = Globals.Instance.session.project;
+
+	var valueFromDOM = inputProjectName.value;
+	documentSelected.name = valueFromDOM;
+
+	//project.domUpdate();	
+}
+
+function selectDocumentsInProject_Changed(selectDocumentsInProject)
+{
+	var project = Globals.Instance.session.project;
+
+	var documentIndex = selectDocumentsInProject.selectedIndex;
+	project.documentIndexSelected = documentIndex;
+
+	project.domUpdate();
+}
+
+function selectSearchResults_Changed(selectSearchResults)
+{
+	var project = Globals.Instance.session.project;
+
+	var searchResultSelectedIndex = selectSearchResults.selectedIndex;
+	var searchResultSelected = project.searchResults[searchResultSelectedIndex];
+	if (searchResultSelected != null)
+	{
+		var documentName = searchResultSelected.documentName;
+		var documentToSelect = project.documents[documentName];
+		var documentIndex = project.documents.indexOf(documentToSelect);
+		project.documentIndexSelected = documentIndex;
+		documentToSelect.cursorPos.overwriteWith(searchResultSelected.posInDocument);
+		project.domUpdate_Cursor_Place();
+	}	
+
+
+}
+
+function textareaDocumentSelectedContents_Changed(textareaDocumentSelectedContents)
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		var valueFromDOM = textareaDocumentSelectedContents.value;
+		documentSelected.contents = valueFromDOM;
+	}
+
+	//project.domUpdate();
+}
+
+function textareaDocumentSelectedContents_CursorMoved()
+{
+	var textareaDocumentSelectedContents = document.getElementById
+	(
+		"textareaDocumentSelectedContents"
+	);
+
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		var text = textareaDocumentSelectedContents.value;
+		var cursorOffsetInChars = textareaDocumentSelectedContents.selectionEnd;
+
+		var cursorPosNew = Document.stringAndCharOffsetToCursorPos
+		(
+			text,
+			cursorOffsetInChars
+		);
+
+		documentSelected.cursorPos.overwriteWith(cursorPosNew);
+
+		project.domUpdate_Cursor();
+
+		//var event = new Event("change");
+		//textareaDocumentSelectedContents.dispatchEvent(event);
+	}
+}
+
+</script>
+
+<script type="text/javascript" src="ArrayExtensions.js"></script>
+<script type="text/javascript" src="StringExtensions.js"></script>
+<script type="text/javascript" src="ByteHelper.js"></script>
+<script type="text/javascript" src="ByteStream.js"></script>
+<script type="text/javascript" src="Coords.js"></script>
+<script type="text/javascript" src="Document.js"></script>
+<script type="text/javascript" src="FileHelper.js"></script>
+<script type="text/javascript" src="Globals.js"></script>
+<script type="text/javascript" src="Project.js"></script>
+<script type="text/javascript" src="SearchResult.js"></script>
+<script type="text/javascript" src="Session.js"></script>
+<script type="text/javascript" src="TarFile.js"></script>
+<script type="text/javascript" src="TarFileEntry.js"></script>
+<script type="text/javascript" src="TarFileEntryHeader.js"></script>
+<script type="text/javascript" src="TarFileTypeFlag.js"></script>
+	
+
+<script type="text/javascript">
+
+function main()
+{
+	var welcomeDocumentContents = "";
+
+	for (var i = 0; i < 32; i++)
+	{
+		welcomeDocumentContents += "Welcome to the multiple document editor!\n";
+	}
+
+	var projectDemo = new Project
+	(
+		"Welcome.tar",
+		[
+			new Document
+			(
+				"Welcome.txt", 
+				welcomeDocumentContents
+			),
+			new Document
+			(
+				"Welcome2.txt", 
+				welcomeDocumentContents
+			)
+
+		]
+	);
+	Globals.Instance.initialize(projectDemo);	
+}
+
+// run
+
+main();
+
+</script>
+
