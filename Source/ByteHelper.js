@@ -17,7 +17,7 @@ function ByteHelper()
 			bytes.push(byte);
 		} 
 
-		return bytes;	
+		return bytes;
 	}
 
 	ByteHelper.bytesToStringUTF8 = function(bytesToConvert)

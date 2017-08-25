@@ -41,6 +41,39 @@ function Project(name, documents)
 		return (this.documentIndexSelected == null ? null : this.documents[this.documentIndexSelected]);
 	}
 
+	Project.prototype.documentsAllRevert = function()
+	{
+		for (var i = 0; i < this.documents.length; i++)
+		{
+			var document = this.documents[i];
+			document.contentsRevertToSaved();
+		}
+	}
+
+	Project.prototype.documentsAllSave = function()
+	{
+		for (var i = 0; i < this.documents.length; i++)
+		{
+			var document = this.documents[i];
+			document.contentsSave();
+		}
+	}
+
+	Project.prototype.documentsModified = function()
+	{
+		var returnValue = false;
+		for (var i = 0; i < this.documents.length; i++)
+		{
+			var document = this.documents[i];
+			if (document.isModified() == true)
+			{
+				returnValue = true;
+			}
+		}
+
+		return returnValue;
+	}
+
 	Project.prototype.searchForText = function(textToSearchFor, matchCase)
 	{
 		this.searchResults.length = 0;
@@ -126,7 +159,7 @@ function Project(name, documents)
 		var selectDocumentsInProject = 
 			document.getElementById("selectDocumentsInProject");
 
-		selectDocumentsInProject.options.length = 0;		
+		selectDocumentsInProject.options.length = 0;
 
 		for (var i = 0; i < this.documents.length; i++)
 		{
@@ -185,7 +218,7 @@ function Project(name, documents)
 	}
 
 	Project.prototype.domUpdate_Cursor_Place = function()
-	{	
+	{
 		var documentSelected = this.documentSelected();
 
 		if (documentSelected != null)
@@ -203,6 +236,8 @@ function Project(name, documents)
 			textareaDocumentSelectedContents.selectionEnd = cursorOffsetInChars;
 			textareaDocumentSelectedContents.focus();
 		}
+		
+		this.domUpdate_Cursor();
 	}
 
 	Project.prototype.domUpdate_Search = function()
@@ -229,16 +264,16 @@ function Project(name, documents)
 		{
 			var _document = this.documents[i];
 
-			var documentContents = _document.contents;
-			var documentContentsAsBytes = ByteHelper.stringUTF8ToBytes
+			var documentContentsSaved = _document.contentsSaved;
+			var documentContentsSavedAsBytes = ByteHelper.stringUTF8ToBytes
 			(
-				documentContents
+				documentContentsSaved
 			);
 
 			var documentAsTarFileEntry = TarFileEntry.fileNew
 			(
 				_document.name,
-				documentContentsAsBytes	
+				documentContentsSavedAsBytes
 			);
 			returnValue.entries.push(documentAsTarFileEntry);
 		}

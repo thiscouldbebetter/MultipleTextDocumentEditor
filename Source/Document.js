@@ -5,6 +5,7 @@ function Document(name, contents)
 	this.contents = contents;
 
 	this.cursorPos = new Coords(0, 0);
+	this.contentsSave();
 }
 
 {
@@ -41,17 +42,34 @@ function Document(name, contents)
 		var newline = "\n";
 		var newlinesSoFar = 0;
 		var offsetCurrent = null;
-	
-		while (offsetCurrent < text.length && newlinesSoFar < cursorPos.y - 1)
+
+		while (offsetCurrent < text.length && newlinesSoFar < cursorPos.y)
 		{
 			var offsetOfNewline = text.indexOf(newline, offsetCurrent);
 			offsetCurrent = offsetOfNewline + 1;
 			newlinesSoFar++;
 		}
 
-		var returnValue = offsetCurrent + cursorPos.x - 1;
+		var returnValue = offsetCurrent + cursorPos.x;
 
 		return returnValue;
+	}
+
+	// instance methods
+
+	Document.prototype.contentsRevertToSaved = function()
+	{
+		this.contents = this.contentsSaved;
+	}
+
+	Document.prototype.contentsSave = function()
+	{
+		this.contentsSaved = this.contents;
+	}
+
+	Document.prototype.isModified = function()
+	{
+		return (this.contents != this.contentsSaved);
 	}
 
 }

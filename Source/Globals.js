@@ -14,9 +14,9 @@ function Globals()
 	}
 
 	// dom 
-	
+
 	Globals.prototype.domUpdate = function()
 	{
-		this.session.domUpdate();	
+		this.session.domUpdate();
 	}
 }

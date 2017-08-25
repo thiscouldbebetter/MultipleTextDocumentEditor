@@ -41,7 +41,7 @@ function TarFileEntryHeader
 	TarFileEntryHeader.SizeInBytes = 500;
 
 	// static methods
-	
+
 	TarFileEntryHeader.default = function()
 	{
 		var now = new Date();
@@ -70,7 +70,7 @@ function TarFileEntryHeader
 			0, // fileSizeInBytes
 			timeModifiedInUnixFormat,
 			0, // checksum
-			TarFileTypeFlag.Instances.Normal,		
+			TarFileTypeFlag.Instances.Normal,
 			"".padRight(100, "\0"), // nameOfLinkedFile,
 			"".padRight(6, "\0"), // uStarIndicator,
 			"".padRight(2, "\0"), // uStarVersion,
@@ -78,12 +78,12 @@ function TarFileEntryHeader
 			"".padRight(32, "\0"), // groupNameOfOwner,
 			"".padRight(8, "\0"), // deviceNumberMajor,
 			"".padRight(8, "\0"), // deviceNumberMinor,
-			"".padRight(155, "\0") // filenamePrefix	
-		);		
-		
+			"".padRight(155, "\0") // filenamePrefix
+		);
+
 		return returnValue;
 	}
-	
+
 	TarFileEntryHeader.directoryNew = function(directoryName)
 	{
 		var header = TarFileEntryHeader.default();
@@ -91,10 +91,10 @@ function TarFileEntryHeader
 		header.typeFlag = TarFileTypeFlag.Instances.Directory;
 		header.fileSizeInBytes = 0;
 		header.checksumCalculate();
-		
+
 		return header;
 	}
-	
+
 	TarFileEntryHeader.fileNew = function(fileName, fileContentsAsBytes)
 	{
 		var header = TarFileEntryHeader.default();
@@ -102,7 +102,7 @@ function TarFileEntryHeader
 		header.typeFlag = TarFileTypeFlag.Instances.Normal;
 		header.fileSizeInBytes = fileContentsAsBytes.length;
 		header.checksumCalculate();
-		
+
 		return header;
 	}
 
@@ -132,12 +132,12 @@ function TarFileEntryHeader
 		(
 			fileSizeInBytesAsStringOctal.trim(), 8
 		);
-		
+
 		var checksum = parseInt
 		(
 			checksumAsStringOctal, 8
-		);		
-		
+		);
+
 		var typeFlags = TarFileTypeFlag.Instances._All;
 		var typeFlagID = "_" + typeFlagValue;
 		var typeFlag = typeFlags[typeFlagID];
@@ -166,16 +166,16 @@ function TarFileEntryHeader
 	}
 
 	// instance methods
-	
+
 	TarFileEntryHeader.prototype.checksumCalculate = function()
-	{	
+	{
 		var thisAsBytes = this.toBytes();
-	
+
 		// The checksum is the sum of all bytes in the header,
 		// except we obviously can't include the checksum itself.
 		// So it's assumed that all 8 of checksum's bytes are spaces (0x20=32).
 		// So we need to set this manually.
-						
+
 		var offsetOfChecksumInBytes = 148;
 		var numberOfBytesInChecksum = 8;
 		var presumedValueOfEachChecksumByte = " ".charCodeAt(0);
@@ -184,25 +184,25 @@ function TarFileEntryHeader
 			var offsetOfByte = offsetOfChecksumInBytes + i;
 			thisAsBytes[offsetOfByte] = presumedValueOfEachChecksumByte;
 		}
-		
+
 		var checksumSoFar = 0;
 
 		for (var i = 0; i < thisAsBytes.length; i++)
 		{
 			var byteToAdd = thisAsBytes[i];
 			checksumSoFar += byteToAdd;
-		}		
+		}
 
 		this.checksum = checksumSoFar;
-		
+
 		return this.checksum;
 	}
-	
+
 	TarFileEntryHeader.prototype.toBytes = function()
 	{
 		var headerAsBytes = [];
 		var writer = new ByteStream(headerAsBytes);
-		
+
 		var fileSizeInBytesAsStringOctal = (this.fileSizeInBytes.toString(8) + " ").padLeft(12, " ")
 		var checksumAsStringOctal = (this.checksum.toString(8) + " \0").padLeft(8, " ");
 
@@ -213,7 +213,7 @@ function TarFileEntryHeader
 		writer.writeString(fileSizeInBytesAsStringOctal, 12);
 		writer.writeBytes(this.timeModifiedInUnixFormat);
 		writer.writeString(checksumAsStringOctal, 8);
-		writer.writeString(this.typeFlag.value, 1);		
+		writer.writeString(this.typeFlag.value, 1);
 		writer.writeString(this.nameOfLinkedFile, 100);
 		writer.writeString(this.uStarIndicator, 6);
 		writer.writeString(this.uStarVersion, 2);
@@ -225,14 +225,14 @@ function TarFileEntryHeader
 		writer.writeString("".padRight(12, "\0")); // reserved
 
 		return headerAsBytes;
-	}		
-		
+	}
+
 	// strings
 
 	TarFileEntryHeader.prototype.toString = function()
-	{		
+	{
 		var newline = "\n";
-	
+
 		var returnValue = 
 			"[TarFileEntryHeader "
 			+ "fileName='" + this.fileName + "' "
@@ -243,4 +243,4 @@ function TarFileEntryHeader
 
 		return returnValue;
 	}
-}	
+}

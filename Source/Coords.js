@@ -15,6 +15,6 @@ function Coords(x, y)
 
 	Coords.prototype.toString = function()
 	{
-		return this.y + ":" + this.x;
+		return (this.y + 1) + ":" + (this.x + 1);
 	}
 }

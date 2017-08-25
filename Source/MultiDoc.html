@@ -24,8 +24,8 @@
 			<label>Name:</label>
 			<input id="inputProjectName" onchange="inputProjectName_Changed(this);"></input>
 		</div>
-		<button onclick="buttonProjectSave_Clicked();">Save</button>
-		<button onclick="buttonProjectLoad_Clicked();">Load:</button>
+		<button onclick="buttonProjectDownload_Clicked();">Download</button>
+		<button onclick="buttonProjectUpload_Clicked();">Upload:</button>
 		<input id="inputFileProjectToLoad" type="file"></input>
 		<button onclick="buttonProjectNew_Clicked();">New</button>
 	</div>
@@ -33,11 +33,13 @@
 	<div id="divDocumentList" class="bordered">
 		<label>Documents:</label>
 		<div>
-			<button onclick="buttonDocumentNew_Clicked();">New</button>		
+			<button onclick="buttonDocumentNew_Clicked();">New</button>
 			<button onclick="buttonDocumentExistingAdd_Clicked();">Add Existing:</button>
 			<input id="inputFileDocumentExistingToAdd" type="file"></input>
 			<button onclick="buttonDocumentSelectedRemove_Clicked();">Remove Selected</button>
-		</div>
+			<button onclick="buttonDocumentsAllSave_Clicked();">Save All</button>
+			<button onclick="buttonDocumentsAllRevert_Clicked();">Revert All to Saved</button>
+			</div>
 		<select id="selectDocumentsInProject" style="width:100%" size="10" onchange="selectDocumentsInProject_Changed(this);"></select>
 	</div>
 
@@ -46,7 +48,9 @@
 		<div>
 			<label>Name:</label>
 			<input id="inputDocumentSelectedName" onchange="inputDocumentSelectedName_Changed(this);"></input>
-			<button onclick="buttonDocumentSelectedSave_Clicked();">Save</button>
+			<button onclick="buttonDocumentSelectedSave_Clicked();">Save Changes</button>
+			<button onclick="buttonDocumentSelectedRevert_Clicked();">Revert to Saved</button>
+			<button onclick="buttonDocumentSelectedDownload_Clicked();">Download</button>
 			<label>Cursor:</label>
 			<label>Row:</label>
 			<input id="inputCursorRow" class="number" type="number" onchange="inputCursorColumnOrRow_Changed(this);"></input>
@@ -74,10 +78,13 @@
 			<input id="checkboxSearchMatchCase" type="checkbox">Match Case</input>
 		</div>
 		<div>
-			<div><label>Results:</label></div>
+			<div>
+				<label>Results:</label>
+				<button onclick="buttonSearchResultsClear_Clicked()">Clear</button>
+			</div>
 			<select id="selectSearchResults" size="8" style="width:100%" onchange="selectSearchResults_Changed(this);"></select>
 		</div>
-		
+
 	</div>
 
 	</div>
@@ -97,7 +104,7 @@ function buttonDocumentExistingAdd_Clicked()
 	var fileToLoad = inputFileDocumentExistingToAdd.files[0];
 	if (fileToLoad == null)
 	{
-		alert("Please choose a file with the accompanying 'Choose File' button first.");
+		window.alert("Please choose a file with the accompanying 'Choose File' button first.");
 	}
 	else
 	{
@@ -132,23 +139,10 @@ function buttonDocumentNew_Clicked()
 	project.domUpdate();
 }
 
-function buttonDocumentSelectedRemove_Clicked()
+function buttonDocumentSelectedDownload_Clicked()
 {
 	var project = Globals.Instance.session.project;
-	
-	var documentSelected = project.documentSelected();
-	if (documentSelected != null)
-	{
-		project.documentRemove(documentSelected);
-	}
 
-	project.domUpdate();
-}
-
-function buttonDocumentSelectedSave_Clicked()
-{
-	var project = Globals.Instance.session.project;
-	
 	var documentSelected = project.documentSelected();
 	if (documentSelected != null)
 	{
@@ -161,7 +155,97 @@ function buttonDocumentSelectedSave_Clicked()
 	project.domUpdate();
 }
 
-function buttonProjectLoad_Clicked()
+function buttonDocumentSelectedRemove_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		project.documentRemove(documentSelected);
+	}
+
+	project.domUpdate();
+}
+
+function buttonDocumentSelectedRevert_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		documentSelected.contentsRevertToSaved();
+	}
+
+	project.domUpdate();
+}
+
+function buttonDocumentSelectedSave_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var documentSelected = project.documentSelected();
+	if (documentSelected != null)
+	{
+		documentSelected.contentsSave();
+	}
+
+	project.domUpdate();
+}
+
+function buttonDocumentsAllRevert_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	project.documentsAllRevert();
+	project.domUpdate();
+}
+
+function buttonDocumentsAllSave_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	project.documentsAllSave();
+	project.domUpdate();
+}
+
+function buttonProjectDownload_Clicked()
+{
+	var project = Globals.Instance.session.project;
+
+	var shouldDownloadProceed = true;
+	if (project.documentsModified() == true)
+	{
+		shouldDownloadProceed = window.confirm
+		(
+			"Are you sure?  Some documents have unsaved changes that will not be reflected in the downloaded project."
+		);
+	}
+
+	if (shouldDownloadProceed == true)
+	{
+		var projectAsTarFile = project.toTarFile();
+		var projectAsBytes = projectAsTarFile.toBytes();
+		FileHelper.saveBytesAsFile(projectAsBytes, project.name);
+	}
+}
+
+function buttonProjectNew_Clicked()
+{
+	var didUserConfirm = window.confirm("Are you sure?");
+	if (didUserConfirm == true)
+	{
+		var projectNew = new Project
+		(
+			"Untitled.tar", []
+		);
+
+		Globals.Instance.session.project = projectNew;
+
+		projectNew.domUpdate();
+	}
+}
+
+function buttonProjectUpload_Clicked()
 {
 	var project = Globals.Instance.session.project;
 
@@ -172,19 +256,27 @@ function buttonProjectLoad_Clicked()
 	var fileToLoad = inputFileProjectToLoad.files[0];
 	if (fileToLoad == null)
 	{
-		alert("Please choose a file with the accompanying 'Choose File' button first.");
+		window.alert("Please choose a file with the accompanying 'Choose File' button first.");
 	}
 	else
 	{
-		FileHelper.loadFileAsBytes
+		var didUserConfirm = window.confirm
 		(
-			fileToLoad,
-			buttonProjectLoad_Clicked_FileLoaded // callback
+			"Are you sure?  Any changes to the current project since it was last downloaded will be lost."
 		);
+
+		if (didUserConfirm == true)
+		{
+			FileHelper.loadFileAsBytes
+			(
+				fileToLoad,
+				buttonProjectUpload_Clicked_FileLoaded // callback
+			);
+		}
 	}
 }
 
-function buttonProjectLoad_Clicked_FileLoaded(fileLoadedName, fileLoadedContentsAsBytes)
+function buttonProjectUpload_Clicked_FileLoaded(fileLoadedName, fileLoadedContentsAsBytes)
 {
 	var projectAsTar = TarFile.fromBytes(fileLoadedName, fileLoadedContentsAsBytes);
 	var documentsAsTarEntries = projectAsTar.entries;
@@ -193,11 +285,14 @@ function buttonProjectLoad_Clicked_FileLoaded(fileLoadedName, fileLoadedContents
 	for (var i = 0; i < documentsAsTarEntries.length; i++)
 	{
 		var documentAsTarEntry = documentsAsTarEntries[i];
-		var documentName = documentAsTarEntry.header.fileName;
-		var documentContentsAsBytes = documentAsTarEntry.dataAsBytes;
-		var documentContentsAsString = ByteHelper.bytesToStringUTF8(documentContentsAsBytes);
-		var document = new Document(documentName, documentContentsAsString);
-		documents.push(document);
+		if (documentAsTarEntry.isNormalFile() == true)
+		{
+			var documentName = documentAsTarEntry.header.fileName;
+			var documentContentsAsBytes = documentAsTarEntry.dataAsBytes;
+			var documentContentsAsString = ByteHelper.bytesToStringUTF8(documentContentsAsBytes);
+			var document = new Document(documentName, documentContentsAsString);
+			documents.push(document);
+		}
 	}
 
 	var projectLoaded = new Project
@@ -211,33 +306,10 @@ function buttonProjectLoad_Clicked_FileLoaded(fileLoadedName, fileLoadedContents
 	projectLoaded.domUpdate();
 }
 
-function buttonProjectNew_Clicked()
-{
-	var projectNew = new Project
-	(
-		"Untitled.tar", []
-	);
-
-	Globals.Instance.session.project = projectNew;
-
-	projectNew.domUpdate();
-
-}
-
-
-function buttonProjectSave_Clicked()
-{
-	var project = Globals.Instance.session.project;
-	
-	var projectAsTarFile = project.toTarFile();
-	var projectAsBytes = projectAsTarFile.toBytes();
-	FileHelper.saveBytesAsFile(projectAsBytes, project.name);
-}
-
 function buttonSearch_Clicked()
 {
 	var project = Globals.Instance.session.project;
-	
+
 	var inputTextToSearchFor = document.getElementById
 	(
 		"inputTextToSearchFor"
@@ -255,6 +327,13 @@ function buttonSearch_Clicked()
 	project.domUpdate();
 }
 
+function buttonSearchResultsClear_Clicked()
+{
+	var project = Globals.Instance.session.project;
+	project.searchResults.length = 0;
+	project.domUpdate();
+}
+
 function inputDocumentSelectedName_Changed(inputDocumentSelectedName)
 {
 	var project = Globals.Instance.session.project;
@@ -266,7 +345,7 @@ function inputDocumentSelectedName_Changed(inputDocumentSelectedName)
 		documentSelected.name = valueFromDOM;
 	}
 
-	//project.domUpdate();	
+	//project.domUpdate();
 }
 
 function inputCursorColumnOrRow_Changed()
@@ -291,11 +370,12 @@ function inputCursorColumnOrRow_Changed()
 function inputProjectName_Changed(inputProjectName)
 {
 	var project = Globals.Instance.session.project;
+	var documentSelected = project.documentSelected();
 
 	var valueFromDOM = inputProjectName.value;
 	documentSelected.name = valueFromDOM;
 
-	//project.domUpdate();	
+	//project.domUpdate();
 }
 
 function selectDocumentsInProject_Changed(selectDocumentsInProject)
@@ -322,9 +402,7 @@ function selectSearchResults_Changed(selectSearchResults)
 		project.documentIndexSelected = documentIndex;
 		documentToSelect.cursorPos.overwriteWith(searchResultSelected.posInDocument);
 		project.domUpdate_Cursor_Place();
-	}	
-
-
+	}
 }
 
 function textareaDocumentSelectedContents_Changed(textareaDocumentSelectedContents)
@@ -384,11 +462,10 @@ function textareaDocumentSelectedContents_CursorMoved()
 <script type="text/javascript" src="Project.js"></script>
 <script type="text/javascript" src="SearchResult.js"></script>
 <script type="text/javascript" src="Session.js"></script>
-<script type="text/javascript" src="TarFile.js"></script>
-<script type="text/javascript" src="TarFileEntry.js"></script>
-<script type="text/javascript" src="TarFileEntryHeader.js"></script>
-<script type="text/javascript" src="TarFileTypeFlag.js"></script>
-	
+<script type="text/javascript" src="TarFile/TarFile.js"></script>
+<script type="text/javascript" src="TarFile/TarFileEntry.js"></script>
+<script type="text/javascript" src="TarFile/TarFileEntryHeader.js"></script>
+<script type="text/javascript" src="TarFile/TarFileTypeFlag.js"></script>
 
 <script type="text/javascript">
 
@@ -412,13 +489,13 @@ function main()
 			),
 			new Document
 			(
-				"Welcome2.txt", 
+				"Directory/Welcome2.txt", 
 				welcomeDocumentContents
 			)
 
 		]
 	);
-	Globals.Instance.initialize(projectDemo);	
+	Globals.Instance.initialize(projectDemo);
 }
 
 // run

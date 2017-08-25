@@ -19,7 +19,7 @@ function ByteStream(bytes)
 	{
 		return (this.byteIndexCurrent < this.bytes.length);
 	}
-	
+
 	ByteStream.prototype.readBytes = function(numberOfBytesToRead)
 	{
 		var returnValue = [];
@@ -77,13 +77,13 @@ function ByteStream(bytes)
 	}
 
 	ByteStream.prototype.writeString = function(stringToWrite, lengthPadded)
-	{	
+	{
 		for (var i = 0; i < stringToWrite.length; i++)
 		{
 			var charAsByte = stringToWrite.charCodeAt(i);
 			this.writeByte(charAsByte);
 		}
-		
+
 		var numberOfPaddingChars = lengthPadded - stringToWrite.length;
 		for (var i = 0; i < numberOfPaddingChars; i++)
 		{
