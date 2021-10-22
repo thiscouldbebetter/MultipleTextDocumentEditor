@@ -1,19 +1,20 @@
 
-function Coords(x, y)
+class Coords
 {
-	this.x = x;
-	this.y = y;
-}
+	constructor(x, y)
+	{
+		this.x = x;
+		this.y = y;
+	}
 
-{
-	Coords.prototype.overwriteWith = function(other)
+	overwriteWith(other)
 	{
 		this.x = other.x;
 		this.y = other.y;
 		return this;
 	}
 
-	Coords.prototype.toString = function()
+	toString()
 	{
 		return (this.y + 1) + ":" + (this.x + 1);
 	}

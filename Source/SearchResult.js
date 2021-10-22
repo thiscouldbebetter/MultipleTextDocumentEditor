@@ -1,16 +1,17 @@
 
-function SearchResult(documentName, posInDocument, lineContainingMatch)
+class SearchResult
 {
-	this.documentName = documentName;
-	this.posInDocument = posInDocument;
-	this.lineContainingMatch = lineContainingMatch;
-}
+	constructor(documentName, posInDocument, lineContainingMatch)
+	{
+		this.documentName = documentName;
+		this.posInDocument = posInDocument;
+		this.lineContainingMatch = lineContainingMatch;
+	}
 
-{
-	SearchResult.prototype.toString = function()
+	toString()
 	{
 		return this.documentName 
-		+ " - " + this.posInDocument.toString() 
-		+ " - " + this.lineContainingMatch;
+			+ " - " + this.posInDocument.toString() 
+			+ " - " + this.lineContainingMatch;
 	}
 }

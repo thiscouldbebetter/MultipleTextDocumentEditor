@@ -1,14 +1,15 @@
 
 
-function Session(project)
+class Session
 {
-	this.project = project;
-}
+	constructor(project)
+	{
+		this.project = project;
+	}
 
-{
 	// dom
 
-	Session.prototype.domUpdate = function()
+	domUpdate()
 	{
 		this.project.domUpdate();
 	}

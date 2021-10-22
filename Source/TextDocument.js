@@ -1,17 +1,18 @@
 
-function Document(name, contents)
+class TextDocument
 {
-	this.name = name;
-	this.contents = contents;
+	constructor(name, contents)
+	{
+		this.name = name;
+		this.contents = contents;
 
-	this.cursorPos = new Coords(0, 0);
-	this.contentsSave();
-}
+		this.cursorPos = new Coords(0, 0);
+		this.contentsSave();
+	}
 
-{
 	// static methods
 
-	Document.stringAndCharOffsetToCursorPos = function(text, cursorOffsetInChars)
+	static stringAndCharOffsetToCursorPos(text, cursorOffsetInChars)
 	{
 		var newline = "\n";
 		var newlinesSoFar = 0;
@@ -37,7 +38,7 @@ function Document(name, contents)
 		return returnValue;
 	}
 
-	Document.stringAndCursorPosToCharOffset = function(text, cursorPos)
+	static stringAndCursorPosToCharOffset(text, cursorPos)
 	{
 		var newline = "\n";
 		var newlinesSoFar = 0;
@@ -57,17 +58,17 @@ function Document(name, contents)
 
 	// instance methods
 
-	Document.prototype.contentsRevertToSaved = function()
+	contentsRevertToSaved()
 	{
 		this.contents = this.contentsSaved;
 	}
 
-	Document.prototype.contentsSave = function()
+	contentsSave()
 	{
 		this.contentsSaved = this.contents;
 	}
 
-	Document.prototype.isModified = function()
+	isModified()
 	{
 		return (this.contents != this.contentsSaved);
 	}

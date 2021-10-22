@@ -1,14 +1,27 @@
 
-function TarFileTypeFlag(value, name)
+class TarFileTypeFlag
 {
-	this.value = value;
-	this.id = "_" + this.value;
-	this.name = name;
-}
-{
-	TarFileTypeFlag.Instances = new TarFileTypeFlag_Instances();
+	constructor(value, name)
+	{
+		this.value = value;
+		this.id = "_" + this.value;
+		this.name = name;
+	}
 
-	function TarFileTypeFlag_Instances()
+	static Instances()
+	{
+		if (TarFileTypeFlag._instances == null)
+		{
+			TarFileTypeFlag._instances =
+				new TarFileTypeFlag_Instances();
+		}
+		return TarFileTypeFlag._instances;
+	}
+}
+
+class TarFileTypeFlag_Instances
+{
+	constructor()
 	{
 		this.Normal 		= new TarFileTypeFlag("0", "Normal");
 		this.HardLink 		= new TarFileTypeFlag("1", "Hard Link");

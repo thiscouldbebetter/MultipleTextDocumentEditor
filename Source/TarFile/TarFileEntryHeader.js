@@ -1,48 +1,49 @@
 
-function TarFileEntryHeader
-(
-	fileName,
-	fileMode,
-	userIDOfOwner,
-	userIDOfGroup,
-	fileSizeInBytes,
-	timeModifiedInUnixFormat,
-	checksum,
-	typeFlag,
-	nameOfLinkedFile,
-	uStarIndicator,
-	uStarVersion,
-	userNameOfOwner,
-	groupNameOfOwner,
-	deviceNumberMajor,
-	deviceNumberMinor,
-	filenamePrefix
-)
+class TarFileEntryHeader
 {
-	this.fileName = fileName;
-	this.fileMode = fileMode;
-	this.userIDOfOwner = userIDOfOwner;
-	this.userIDOfGroup = userIDOfGroup;
-	this.fileSizeInBytes = fileSizeInBytes;
-	this.timeModifiedInUnixFormat = timeModifiedInUnixFormat;
-	this.checksum = checksum;
-	this.typeFlag = typeFlag;
-	this.nameOfLinkedFile = nameOfLinkedFile;
-	this.uStarIndicator = uStarIndicator;
-	this.uStarVersion = uStarVersion;
-	this.userNameOfOwner = userNameOfOwner;
-	this.groupNameOfOwner = groupNameOfOwner;
-	this.deviceNumberMajor = deviceNumberMajor;
-	this.deviceNumberMinor = deviceNumberMinor;
-	this.filenamePrefix = filenamePrefix;
-}
+	constructor
+	(
+		fileName,
+		fileMode,
+		userIDOfOwner,
+		userIDOfGroup,
+		fileSizeInBytes,
+		timeModifiedInUnixFormat,
+		checksum,
+		typeFlag,
+		nameOfLinkedFile,
+		uStarIndicator,
+		uStarVersion,
+		userNameOfOwner,
+		groupNameOfOwner,
+		deviceNumberMajor,
+		deviceNumberMinor,
+		filenamePrefix
+	)
+	{
+		this.fileName = fileName;
+		this.fileMode = fileMode;
+		this.userIDOfOwner = userIDOfOwner;
+		this.userIDOfGroup = userIDOfGroup;
+		this.fileSizeInBytes = fileSizeInBytes;
+		this.timeModifiedInUnixFormat = timeModifiedInUnixFormat;
+		this.checksum = checksum;
+		this.typeFlag = typeFlag;
+		this.nameOfLinkedFile = nameOfLinkedFile;
+		this.uStarIndicator = uStarIndicator;
+		this.uStarVersion = uStarVersion;
+		this.userNameOfOwner = userNameOfOwner;
+		this.groupNameOfOwner = groupNameOfOwner;
+		this.deviceNumberMajor = deviceNumberMajor;
+		this.deviceNumberMinor = deviceNumberMinor;
+		this.filenamePrefix = filenamePrefix;
+	}
 
-{
-	TarFileEntryHeader.SizeInBytes = 500;
+	static SizeInBytes = 500;
 
 	// static methods
 
-	TarFileEntryHeader.default = function()
+	static default()
 	{
 		var now = new Date();
 		var unixEpoch = new Date(1970, 1, 1);
@@ -65,48 +66,48 @@ function TarFileEntryHeader
 		(
 			"".padRight(100, "\0"), // fileName
 			"100777 \0", // fileMode
-			"0 \0".padLeft(8, " "), // userIDOfOwner
-			"0 \0".padLeft(8, " "), // userIDOfGroup
+			"0 \0".padStart(8, " "), // userIDOfOwner
+			"0 \0".padStart(8, " "), // userIDOfGroup
 			0, // fileSizeInBytes
 			timeModifiedInUnixFormat,
 			0, // checksum
-			TarFileTypeFlag.Instances.Normal,
-			"".padRight(100, "\0"), // nameOfLinkedFile,
-			"".padRight(6, "\0"), // uStarIndicator,
-			"".padRight(2, "\0"), // uStarVersion,
-			"".padRight(32, "\0"), // userNameOfOwner,
-			"".padRight(32, "\0"), // groupNameOfOwner,
-			"".padRight(8, "\0"), // deviceNumberMajor,
-			"".padRight(8, "\0"), // deviceNumberMinor,
-			"".padRight(155, "\0") // filenamePrefix
+			TarFileTypeFlag.Instances().Normal,
+			"".padEnd(100, "\0"), // nameOfLinkedFile,
+			"".padEnd(6, "\0"), // uStarIndicator,
+			"".padEnd(2, "\0"), // uStarVersion,
+			"".padEnd(32, "\0"), // userNameOfOwner,
+			"".padEnd(32, "\0"), // groupNameOfOwner,
+			"".padEnd(8, "\0"), // deviceNumberMajor,
+			"".padEnd(8, "\0"), // deviceNumberMinor,
+			"".padEnd(155, "\0") // filenamePrefix
 		);
 
 		return returnValue;
 	}
 
-	TarFileEntryHeader.directoryNew = function(directoryName)
+	directoryNew(directoryName)
 	{
 		var header = TarFileEntryHeader.default();
 		header.fileName = directoryName;
-		header.typeFlag = TarFileTypeFlag.Instances.Directory;
+		header.typeFlag = TarFileTypeFlag.Instances().Directory;
 		header.fileSizeInBytes = 0;
 		header.checksumCalculate();
 
 		return header;
 	}
 
-	TarFileEntryHeader.fileNew = function(fileName, fileContentsAsBytes)
+	fileNew(fileName, fileContentsAsBytes)
 	{
 		var header = TarFileEntryHeader.default();
 		header.fileName = fileName;
-		header.typeFlag = TarFileTypeFlag.Instances.Normal;
+		header.typeFlag = TarFileTypeFlag.Instances().Normal;
 		header.fileSizeInBytes = fileContentsAsBytes.length;
 		header.checksumCalculate();
 
 		return header;
 	}
 
-	TarFileEntryHeader.fromBytes = function(bytes)
+	fromBytes(bytes)
 	{
 		var reader = new ByteStream(bytes);
 
@@ -138,7 +139,7 @@ function TarFileEntryHeader
 			checksumAsStringOctal, 8
 		);
 
-		var typeFlags = TarFileTypeFlag.Instances._All;
+		var typeFlags = TarFileTypeFlag.Instances()._All;
 		var typeFlagID = "_" + typeFlagValue;
 		var typeFlag = typeFlags[typeFlagID];
 
@@ -167,7 +168,7 @@ function TarFileEntryHeader
 
 	// instance methods
 
-	TarFileEntryHeader.prototype.checksumCalculate = function()
+	checksumCalculate()
 	{
 		var thisAsBytes = this.toBytes();
 
@@ -198,13 +199,15 @@ function TarFileEntryHeader
 		return this.checksum;
 	}
 
-	TarFileEntryHeader.prototype.toBytes = function()
+	toBytes()
 	{
 		var headerAsBytes = [];
 		var writer = new ByteStream(headerAsBytes);
 
-		var fileSizeInBytesAsStringOctal = (this.fileSizeInBytes.toString(8) + " ").padLeft(12, " ")
-		var checksumAsStringOctal = (this.checksum.toString(8) + " \0").padLeft(8, " ");
+		var fileSizeInBytesAsStringOctal =
+			(this.fileSizeInBytes.toString(8) + " ").padStart(12, " ")
+		var checksumAsStringOctal =
+			(this.checksum.toString(8) + " \0").padStart(8, " ");
 
 		writer.writeString(this.fileName, 100);
 		writer.writeString(this.fileMode, 8);
@@ -229,7 +232,7 @@ function TarFileEntryHeader
 
 	// strings
 
-	TarFileEntryHeader.prototype.toString = function()
+	toString()
 	{
 		var newline = "\n";
 

@@ -1,32 +1,34 @@
 
-function Project(name, documents)
+class Project
 {
-	this.name = name;
-	this.documents = documents.addLookups("name");
-
-	if (this.documents.length > 0)
+	constructor(name, documents)
 	{
-		this.documentIndexSelected = 0;
+		this.name = name;
+		this.documents = ArrayHelper.addLookups(documents, "name");
+
+		if (this.documents.length > 0)
+		{
+			this.documentIndexSelected = 0;
+		}
+
+		this.searchResults = [];
 	}
 
-	this.searchResults = [];
-}
-
-{
-	Project.prototype.documentAdd = function(documentToAdd)
+	documentAdd(documentToAdd)
 	{
 		this.documents.push(documentToAdd);
 		this.documents[documentToAdd.name] = documentToAdd;
 		this.documentIndexSelected = this.documents.length - 1;
 	}
 
-	Project.prototype.documentNew = function()
+	documentNew()
 	{
-		var documentNew = new Document("Untitled.txt", "");
+		var documentNew =
+			new TextDocument("Untitled.txt", "");
 		this.documentAdd(documentNew);
 	}
 
-	Project.prototype.documentRemove = function(documentToRemove)
+	documentRemove(documentToRemove)
 	{
 		this.documents.remove(documentToRemove);
 		delete this.documents[documentToRemove.name];
@@ -36,12 +38,18 @@ function Project(name, documents)
 		}
 	}
 
-	Project.prototype.documentSelected = function()
+	documentSelected()
 	{
-		return (this.documentIndexSelected == null ? null : this.documents[this.documentIndexSelected]);
+		var returnValue =
+		(
+			this.documentIndexSelected == null
+			? null
+			: this.documents[this.documentIndexSelected]
+		);
+		return returnValue;
 	}
 
-	Project.prototype.documentsAllRevert = function()
+	documentsAllRevert()
 	{
 		for (var i = 0; i < this.documents.length; i++)
 		{
@@ -50,7 +58,7 @@ function Project(name, documents)
 		}
 	}
 
-	Project.prototype.documentsAllSave = function()
+	documentsAllSave()
 	{
 		for (var i = 0; i < this.documents.length; i++)
 		{
@@ -59,7 +67,7 @@ function Project(name, documents)
 		}
 	}
 
-	Project.prototype.documentsModified = function()
+	documentsModified()
 	{
 		var returnValue = false;
 		for (var i = 0; i < this.documents.length; i++)
@@ -74,7 +82,7 @@ function Project(name, documents)
 		return returnValue;
 	}
 
-	Project.prototype.searchForText = function(textToSearchFor, matchCase)
+	searchForText(textToSearchFor, matchCase)
 	{
 		this.searchResults.length = 0;
 
@@ -104,7 +112,7 @@ function Project(name, documents)
 
 				if (indexOfMatchInContents >= 0)
 				{
-					var matchPos = Document.stringAndCharOffsetToCursorPos
+					var matchPos = TextDocument.stringAndCharOffsetToCursorPos
 					(
 						documentContents,
 						indexOfMatchInContents
@@ -112,8 +120,10 @@ function Project(name, documents)
 
 					var newline = "\n";
 
-					var lineWithMatchStart = documentContents.lastIndexOf(newline, indexOfMatchInContents);
-					var lineWithMatchEnd = documentContents.indexOf(newline, indexOfMatchInContents);
+					var lineWithMatchStart =
+						documentContents.lastIndexOf(newline, indexOfMatchInContents);
+					var lineWithMatchEnd =
+						documentContents.indexOf(newline, indexOfMatchInContents);
 
 					if (lineWithMatchStart == -1)
 					{
@@ -149,22 +159,24 @@ function Project(name, documents)
 
 	// dom
 
-	Project.prototype.domUpdate = function()
+	domUpdate()
 	{
+		var d = document;
+
 		var inputProjectName = 
-			document.getElementById("inputProjectName");
+			d.getElementById("inputProjectName");
 
 		inputProjectName.value = this.name;
 
 		var selectDocumentsInProject = 
-			document.getElementById("selectDocumentsInProject");
+			d.getElementById("selectDocumentsInProject");
 
 		selectDocumentsInProject.options.length = 0;
 
 		for (var i = 0; i < this.documents.length; i++)
 		{
 			var _document = this.documents[i];
-			var documentAsOption = document.createElement("option");
+			var documentAsOption = d.createElement("option");
 			documentAsOption.innerHTML = _document.name;
 			selectDocumentsInProject.appendChild(documentAsOption);
 		}
@@ -172,9 +184,9 @@ function Project(name, documents)
 		var documentSelected = this.documentSelected();
 
 		var inputDocumentSelectedName = 
-			document.getElementById("inputDocumentSelectedName");
+			d.getElementById("inputDocumentSelectedName");
 		var textareaDocumentSelectedContents = 
-			document.getElementById("textareaDocumentSelectedContents");
+			d.getElementById("textareaDocumentSelectedContents");
 
 		if (documentSelected == null)
 		{
@@ -196,12 +208,14 @@ function Project(name, documents)
 		this.domUpdate_Search();
 	}
 
-	Project.prototype.domUpdate_Cursor = function()
+	domUpdate_Cursor()
 	{
+		var d = document;
+
 		var inputCursorColumn = 
-			document.getElementById("inputCursorColumn");
+			d.getElementById("inputCursorColumn");
 		var inputCursorRow = 
-			document.getElementById("inputCursorRow");
+			d.getElementById("inputCursorRow");
 
 		var documentSelected = this.documentSelected();
 
@@ -212,37 +226,46 @@ function Project(name, documents)
 		}
 		else
 		{
-			inputCursorRow.value = documentSelected.cursorPos.y + 1;
-			inputCursorColumn.value = documentSelected.cursorPos.x + 1;
+			inputCursorRow.value =
+				documentSelected.cursorPos.y + 1;
+			inputCursorColumn.value =
+				documentSelected.cursorPos.x + 1;
 		}
 	}
 
-	Project.prototype.domUpdate_Cursor_Place = function()
+	domUpdate_Cursor_Place()
 	{
 		var documentSelected = this.documentSelected();
 
 		if (documentSelected != null)
 		{
-			var cursorOffsetInChars = Document.stringAndCursorPosToCharOffset
-			(
-				documentSelected.contents,
-				documentSelected.cursorPos
-			);
+			var cursorOffsetInChars =
+				TextDocument.stringAndCursorPosToCharOffset
+				(
+					documentSelected.contents,
+					documentSelected.cursorPos
+				);
 
+			var d = document;
 			var textareaDocumentSelectedContents = 
-				document.getElementById("textareaDocumentSelectedContents");
+				d.getElementById("textareaDocumentSelectedContents");
 
-			textareaDocumentSelectedContents.selectionStart = cursorOffsetInChars; 
-			textareaDocumentSelectedContents.selectionEnd = cursorOffsetInChars;
+			textareaDocumentSelectedContents.selectionStart =
+				cursorOffsetInChars; 
+			textareaDocumentSelectedContents.selectionEnd =
+				cursorOffsetInChars;
 			textareaDocumentSelectedContents.focus();
 		}
-		
+
 		this.domUpdate_Cursor();
 	}
 
-	Project.prototype.domUpdate_Search = function()
+	domUpdate_Search()
 	{
-		var selectSearchResults = document.getElementById("selectSearchResults");
+		var d = document;
+
+		var selectSearchResults =
+			d.getElementById("selectSearchResults");
 		selectSearchResults.innerHTML = "";
 
 		for (var i = 0; i < this.searchResults.length; i++)
@@ -256,7 +279,7 @@ function Project(name, documents)
 
 	// tar
 
-	Project.prototype.toTarFile = function()
+	toTarFile()
 	{
 		var returnValue = TarFile.new();
 

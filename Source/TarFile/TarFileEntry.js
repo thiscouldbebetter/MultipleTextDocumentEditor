@@ -1,16 +1,17 @@
 
-function TarFileEntry(header, dataAsBytes)
+class TarFileEntry
 {
-	this.header = header;
-	this.dataAsBytes = dataAsBytes;
-}
+	constructor(header, dataAsBytes)
+	{
+		this.header = header;
+		this.dataAsBytes = dataAsBytes;
+	}
 
-{
 	// methods
 
 	// static methods
 
-	TarFileEntry.directoryNew = function(directoryName)
+	static directoryNew(directoryName)
 	{
 		var header = TarFileEntryHeader.directoryNew(directoryName);
 
@@ -19,7 +20,7 @@ function TarFileEntry(header, dataAsBytes)
 		return entry;
 	}
 
-	TarFileEntry.fileNew = function(fileName, fileContentsAsBytes)
+	static fileNew(fileName, fileContentsAsBytes)
 	{
 		var header = TarFileEntryHeader.fileNew(fileName, fileContentsAsBytes);
 
@@ -28,7 +29,7 @@ function TarFileEntry(header, dataAsBytes)
 		return entry;
 	}
 
-	TarFileEntry.fromBytes = function(chunkAsBytes, reader)
+	static fromBytes(chunkAsBytes, reader)
 	{
 		var chunkSize = TarFile.ChunkSize;
 
@@ -42,7 +43,7 @@ function TarFileEntry(header, dataAsBytes)
 		var numberOfChunksOccupiedByDataEntry = Math.ceil
 		(
 			sizeOfDataEntryInBytesUnpadded / chunkSize
-		)
+		);
 
 		var sizeOfDataEntryInBytesPadded = 
 			numberOfChunksOccupiedByDataEntry
@@ -61,7 +62,7 @@ function TarFileEntry(header, dataAsBytes)
 		return entry;
 	}
 
-	TarFileEntry.manyFromByteArrays = function
+	static manyFromByteArrays
 	(
 		fileNamePrefix, fileNameSuffix, entriesAsByteArrays
 	)
@@ -85,7 +86,7 @@ function TarFileEntry(header, dataAsBytes)
 
 	// instance methods
 
-	TarFileEntry.prototype.download = function(event)
+	download(event)
 	{
 		FileHelper.saveBytesAsFile
 		(
@@ -94,17 +95,17 @@ function TarFileEntry(header, dataAsBytes)
 		);
 	}
 
-	TarFileEntry.prototype.isNormalFile = function()
+	isNormalFile()
 	{
-		return (this.header.typeFlag == TarFileTypeFlag.Instances.Normal);
+		return (this.header.typeFlag == TarFileTypeFlag.Instances().Normal);
 	}
 
-	TarFileEntry.prototype.remove = function(event)
+	remove(event)
 	{
 		alert("Not yet implemented!"); // todo
 	}
 
-	TarFileEntry.prototype.toBytes = function()
+	toBytes()
 	{
 		var entryAsBytes = [];
 
@@ -139,7 +140,7 @@ function TarFileEntry(header, dataAsBytes)
 
 	// strings
 
-	TarFileEntry.prototype.toString = function()
+	toString()
 	{
 		var newline = "\n";
 

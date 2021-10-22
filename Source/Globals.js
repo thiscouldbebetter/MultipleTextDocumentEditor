@@ -1,13 +1,9 @@
 
-function Globals()
+class Globals
 {
-	// do nothing
-}
+	static Instance = new Globals();
 
-{
-	Globals.Instance = new Globals();
-
-	Globals.prototype.initialize = function(project)
+	initialize(project)
 	{
 		this.session = new Session(project);
 		this.domUpdate();
@@ -15,7 +11,7 @@ function Globals()
 
 	// dom 
 
-	Globals.prototype.domUpdate = function()
+	domUpdate()
 	{
 		this.session.domUpdate();
 	}
